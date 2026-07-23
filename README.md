@@ -17,6 +17,3 @@ Modern customizable productivity dashboard with task management, notes, quick li
 - 🔗 Custom Quick Links
 - 🌙 Dynamic Greeting
 - 📱 Responsive Design
-## 📷 Preview
-
-![Preview](preview.png)
