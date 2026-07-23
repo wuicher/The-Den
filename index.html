@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>poshelnakhiu</title>
+    <!-- Favicon: Годжо Сатору (SVG Data-URI) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23050508'/><path d='M12,26 Q18,8 26,14 Q32,4 38,14 Q46,8 52,26 Q44,20 32,22 Q20,20 12,26 Z' fill='%23FFFFFF'/><rect x='20' y='22' width='24' height='24' fill='%23CCCCCC' rx='4'/><rect x='15' y='25' width='34' height='11' fill='%23111116' rx='3'/><line x1='20' y1='36' x2='44' y2='36' stroke='%2300e5ff' stroke-width='1.5' opacity='0.85'/></svg>">
+    <!-- Иконки Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Библиотека распознавания текста Tesseract.js -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #030408;
+            --card-bg: rgba(8, 9, 14, 0.65); 
+            --accent-white: #9c9ea6; 
+            --pure-white: #e4e5eb; 
+            --text-muted: #484a54; 
+            --border-color: rgba(255, 255, 255, 0.05);
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden; 
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--accent-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        @keyframes simpleFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #city-bg, .top-sky-glow, .horizon-fog, .vignette {
+            opacity: 0;
+            animation: simpleFade 0.3s ease forwards;
+            animation-delay: 0s;
+        }
+
+        .header, .brand-watermark, .focus-btn, .lang-btn {
+            opacity: 0;
+            animation: simpleFade 0.3s ease forwards;
+            animation-delay: 0.15s;
+        }
+
+        .search-box, .main-content {
+            opacity: 0;
+            animation: simpleFade 0.3s ease forwards;
+            animation-delay: 0.3s;
+        }
+
+        .top-sky-glow {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(circle at top, rgba(70, 90, 170, 0.09), transparent 60%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .horizon-fog {
+            position: fixed;
+            bottom: 10%; left: 0;
+            width: 100vw; height: 30vh;
+            background: linear-gradient(0deg, rgba(80, 105, 155, 0.1), transparent);
+            filter: blur(50px);
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.75) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #city-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            height: 100vh;
+            padding: 8px 20px 15px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 10px;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* КНОПКА ПЕРЕКЛЮЧЕНИЯ ЯЗЫКА (RU / EN) В ЛЕВОМ УГЛУ */
+        .lang-btn {
+            position: absolute;
+            top: 12px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--accent-white);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.25s;
+            z-index: 10;
+            font-weight: 600;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--pure-white);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* КНОПКА FOCUS В ПРАВОМ УГЛУ */
+        .focus-btn {
+            position: absolute;
+            top: 12px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--accent-white);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.25s;
+            z-index: 10;
+        }
+
+        .focus-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--pure-white);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .brand-watermark {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            text-align: center;
+            opacity: 0.4;
+            user-select: none;
+            margin-bottom: -4px;
+        }
+
+        .header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .greeting-badge {
+            font-size: 0.82rem;
+            color: var(--pure-white);
+            letter-spacing: 1px;
+            margin-bottom: 1px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .greeting-subtitle {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        #clock {
+            font-size: 2.7rem;
+            font-weight: 200;
+            color: var(--pure-white);
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.12);
+            cursor: pointer;
+            user-select: none;
+            transition: 0.25s;
+            display: inline-block;
+            line-height: 1.05;
+        }
+
+        #clock:hover {
+            text-shadow: 0 0 35px rgba(255, 255, 255, 0.4);
+            transform: scale(1.02);
+        }
+
+        #date {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .daily-quote {
+            font-size: 0.73rem;
+            font-style: italic;
+            color: #6a6c76;
+            margin-top: 3px;
+            max-width: 650px;
+            line-height: 1.3;
+        }
+
+        .search-box {
+            width: 100%;
+        }
+
+        .search-box form {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 3px 4px 3px 8px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: 0.25s;
+            backdrop-filter: blur(16px);
+        }
+
+        .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--pure-white);
+            padding: 7px 12px;
+            font-size: 0.92rem;
+        }
+
+        .search-box button {
+            background: rgba(255, 255, 255, 0.07);
+            color: var(--pure-white);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 0 18px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .search-box button:hover {
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex: 1;
+            min-height: 0; 
+        }
+
+        @media (max-width: 850px) {
+            .main-content { grid-template-columns: 1fr; }
+            body { overflow-y: auto; }
+        }
+
+        .left-column, .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .app-card, .widget {
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(16px);
+            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+        }
+
+        .app-card {
+            padding: 12px 6px;
+            text-decoration: none;
+            color: var(--accent-white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-card:hover, .widget:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        /* КНОПКА РЕДАКТИРОВАНИЯ ВКЛАДКИ ПРИ НАВЕДЕНИИ */
+        .app-edit-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            opacity: 0;
+            transition: 0.2s;
+            padding: 3px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .app-card:hover .app-edit-btn {
+            opacity: 0.7;
+        }
+
+        .app-edit-btn:hover {
+            opacity: 1 !important;
+            color: var(--pure-white);
+        }
+
+        .app-icon {
+            width: 34px;
+            height: 34px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #727584;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.25s;
+        }
+
+        .app-card:hover .app-icon {
+            color: var(--pure-white);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .app-name {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #585a66;
+            transition: 0.25s;
+        }
+
+        .app-card:hover .app-name {
+            color: var(--pure-white);
+        }
+
+        .widget {
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-height: 100px;
+            overflow: hidden;
+        }
+
+        .widget-header {
+            font-size: 0.7rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #585a66;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .widget-header i {
+            margin-right: 6px;
+            color: var(--accent-white);
+            opacity: 0.7;
+        }
+
+        .stats-widget {
+            flex-shrink: 0;
+            min-height: 75px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 6px 4px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-val {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--pure-white);
+        }
+
+        .stat-lbl {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        .translator {
+            flex: 1;
+            min-height: 140px;
+        }
+
+        .lang-select-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .lang-select-group select {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--pure-white);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 0.65rem;
+            outline: none;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .lang-select-group select option {
+            background: #09090e;
+            color: #ffffff;
+        }
+
+        .trans-input-zone {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
+
+        .trans-input-zone input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: var(--pure-white);
+            outline: none;
+            font-size: 0.8rem;
+            transition: 0.25s;
+        }
+
+        .trans-input-zone button {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--pure-white);
+            width: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .trans-input-zone button:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .drop-zone {
+            border: 1px dashed rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            min-height: 42px;
+            justify-content: center;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--pure-white);
+        }
+
+        .trans-result {
+            margin-top: 6px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            max-height: 80px;
+            min-height: 0;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+
+        .result-header button {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        #result-text {
+            font-size: 0.8rem;
+            line-height: 1.3;
+            color: var(--pure-white);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            flex: 1;
+        }
+
+        .grind-list {
+            flex: 1;
+            min-height: 160px;
+        }
+
+        .progress-bar-wrap {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 2px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #484a56, var(--pure-white));
+            transition: width 0.4s ease;
+        }
+
+        .grind-input-zone {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .grind-input-zone input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: var(--pure-white);
+            outline: none;
+            font-size: 0.8rem;
+            transition: 0.25s;
+        }
+
+        .grind-input-zone button {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--pure-white);
+            width: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .grind-input-zone button:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        #grind-tasks {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            overflow-y: auto;
+            max-height: 100px;
+        }
+
+        .grind-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.01);
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: 0.25s;
+        }
+
+        .grind-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .grind-checkbox {
+            width: 14px;
+            height: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: var(--pure-white);
+        }
+
+        .grind-item.completed .grind-checkbox {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .grind-item.completed .grind-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .grind-text {
+            font-size: 0.8rem;
+            color: var(--accent-white);
+        }
+
+        .grind-delete-btn {
+            background: transparent;
+            border: none;
+            color: #353744;
+            cursor: pointer;
+            padding: 2px;
+            transition: 0.25s;
+        }
+
+        .grind-delete-btn:hover { color: #d9534f; }
+
+        .calculator {
+            min-height: 165px;
+            flex-shrink: 0;
+        }
+
+        .calc-screen {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            padding: 4px 10px;
+            text-align: right;
+            font-size: 0.95rem;
+            color: var(--pure-white);
+            margin-bottom: 6px;
+            min-height: 28px;
+            font-family: monospace;
+            outline: none;
+            transition: 0.25s;
+        }
+
+        .calc-screen:focus {
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+
+        .calc-buttons button {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--accent-white);
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .calc-buttons button:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--pure-white);
+        }
+
+        .notepad {
+            min-height: 120px;
+            flex: 1;
+        }
+
+        #notes-area {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--accent-white);
+            resize: none;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            overflow-y: auto;
+            min-height: 60px;
+        }
+
+        #notes-area::placeholder { color: #282a36; }
+
+        .dream-widget {
+            flex-shrink: 0;
+            min-height: 60px;
+            cursor: pointer;
+        }
+
+        .dream-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dream-days {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--pure-white);
+            letter-spacing: 1px;
+        }
+
+        .dream-subtext {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-left: 6px;
+            font-weight: normal;
+        }
+
+        .spotify-widget {
+            flex-shrink: 0;
+            min-height: 75px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .spotify-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .spotify-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spotify-glow-icon {
+            font-size: 1.5rem;
+            color: #1db954;
+            filter: drop-shadow(0 0 8px rgba(29, 185, 84, 0.4));
+        }
+
+        .spotify-status-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--pure-white);
+        }
+
+        .status-sub {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        .spotify-btn-group {
+            display: flex;
+            gap: 6px;
+            position: relative;
+            z-index: 15;
+        }
+
+        .spotify-btn {
+            text-decoration: none;
+            font-size: 0.72rem;
+            font-weight: bold;
+            color: var(--pure-white);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.25s;
+            cursor: pointer;
+            position: relative;
+            z-index: 20;
+        }
+
+        .spotify-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+        }
+
+        #focus-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            gap: 20px;
+            width: 100%;
+            max-width: 620px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .focus-task-card {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 25px;
+            text-align: center;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .focus-task-header {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #focus-task-select {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--pure-white);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            outline: none;
+            cursor: pointer;
+            max-width: 220px;
+        }
+
+        #focus-task-select option {
+            background: #09090e;
+            color: #ffffff;
+        }
+
+        .focus-task-text {
+            font-size: 1.35rem;
+            font-weight: 300;
+            color: var(--pure-white);
+            line-height: 1.4;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .focus-complete-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--pure-white);
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: 0.25s;
+            align-self: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .focus-complete-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .focus-spotify-wrap {
+            width: 100%;
+        }
+
+        body.focus-mode-active .search-box,
+        body.focus-mode-active .main-content,
+        body.focus-mode-active .brand-watermark {
+            display: none !important;
+        }
+
+        body.focus-mode-active #focus-container {
+            display: flex !important;
+        }
+
+        body.focus-mode-active .focus-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--pure-white);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        #grind-tasks::-webkit-scrollbar, #notes-area::-webkit-scrollbar, #result-text::-webkit-scrollbar {
+            width: 3px;
+        }
+        #grind-tasks::-webkit-scrollbar-thumb, #notes-area::-webkit-scrollbar-thumb, #result-text::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-sky-glow"></div>
+    <div class="horizon-fog"></div>
+    <div class="vignette"></div>
+
+    <canvas id="city-bg"></canvas>
+
+    <div class="container">
+        <!-- КНОПКА ПЕРЕКЛЮЧЕНИЯ ЯЗЫКА -->
+        <button id="lang-toggle-btn" class="lang-btn" onclick="toggleLanguage()">
+            <i class="fa-solid fa-globe"></i> <span id="lang-btn-text">RU</span>
+        </button>
+
+        <!-- КНОПКА FOCUS -->
+        <button id="focus-btn" class="focus-btn" onclick="toggleFocusMode()">
+            <i class="fa-solid fa-crosshairs"></i> <span id="lbl-focus-btn">Focus</span>
+        </button>
+
+        <div class="brand-watermark">poshelnakhiu</div>
+
+        <div class="header">
+            <div class="greeting-badge" id="greeting-text">
+                <i class="fa-regular fa-moon"></i> Доброй ночи.
+            </div>
+            <div class="greeting-subtitle" id="greeting-sub">Продолжим путь.</div>
+            <div id="clock" title="Клик — изменить формат">00:00:00</div>
+            <div id="date">Загрузка...</div>
+            <div class="daily-quote" id="daily-quote">«Дисциплина — это решение делать то, чего не хочется делать, чтобы достичь того, чего очень хочется.»</div>
+        </div>
+
+        <div class="search-box">
+            <form action="https://www.google.com/search" method="GET">
+                <input type="text" id="search-input" name="q" placeholder="Поиск в Google..." required autocomplete="off">
+                <button type="submit" id="search-btn">Найти</button>
+            </form>
+        </div>
+
+        <div id="focus-container">
+            <div class="focus-task-card">
+                <div class="focus-task-header">
+                    <span><i class="fa-solid fa-bullseye"></i> <span id="lbl-focus-title">Главная задача дня</span></span>
+                    <select id="focus-task-select" onchange="changeFocusTask(this.value)"></select>
+                </div>
+                <div class="focus-task-text" id="focus-task-display">Загрузка задачи...</div>
+                <button class="focus-complete-btn" onclick="completeFocusTask()"><i class="fa-solid fa-check"></i> <span id="lbl-focus-complete">Выполнить задачу</span></button>
+            </div>
+            <div class="focus-spotify-wrap">
+                <div class="widget spotify-widget">
+                    <div class="spotify-card">
+                        <div class="spotify-info">
+                            <i class="fa-brands fa-spotify spotify-glow-icon"></i>
+                            <div class="spotify-status-text">
+                                <span class="status-title" id="lbl-spot-title">Музыка в Spotify</span>
+                                <span class="status-sub" id="lbl-spot-sub">Режим глубокого фокуса</span>
+                            </div>
+                        </div>
+                        <div class="spotify-btn-group">
+                            <a href="https://open.spotify.com/playlist/11kpLkm4ZNDZDBmLuoAfVd" target="_blank" class="spotify-btn">
+                                <i class="fa-solid fa-play"></i> I
+                            </a>
+                            <a href="https://open.spotify.com/playlist/6T3zkKG6fOyYJe43BF4HQt" target="_blank" class="spotify-btn">
+                                <i class="fa-solid fa-play"></i> II
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            
+            <div class="left-column">
+                <!-- ДИНАМИЧЕСКАЯ СЕТКА 3x3 -->
+                <div class="apps-grid" id="apps-grid-container"></div>
+
+                <div class="widget notepad">
+                    <div class="widget-header">
+                        <span><i class="fa-regular fa-note-sticky"></i> <span id="lbl-notes">Заметки</span></span>
+                        <span style="font-size: 0.65rem; font-weight: normal;" id="save-status">сохранено</span>
+                    </div>
+                    <textarea id="notes-area" placeholder="Напиши что-нибудь..."></textarea>
+                </div>
+
+                <!-- МУЛЬТИЯЗЫЧНЫЙ ПЕРЕВОДЧИК -->
+                <div class="widget translator">
+                    <div class="widget-header">
+                        <span><i class="fa-solid fa-language"></i> <span id="lbl-trans">Переводчик</span></span>
+                        <div class="lang-select-group">
+                            <select id="trans-src-lang" title="С какого языка">
+                                <option value="auto" data-ocr="eng+rus" selected>Авто</option>
+                                <option value="en" data-ocr="eng">ENG</option>
+                                <option value="ru" data-ocr="rus">RUS</option>
+                                <option value="ja" data-ocr="jpn">JPN</option>
+                                <option value="de" data-ocr="deu">DEU</option>
+                                <option value="fr" data-ocr="fra">FRA</option>
+                                <option value="es" data-ocr="spa">ESP</option>
+                                <option value="zh" data-ocr="chi_sim">ZHO</option>
+                                <option value="ko" data-ocr="kor">KOR</option>
+                            </select>
+                            <i class="fa-solid fa-arrow-right-long" style="font-size: 0.55rem; color: var(--text-muted); opacity:0.6;"></i>
+                            <select id="trans-target-lang" title="На какой язык" onchange="translateText()">
+                                <option value="ru" selected>RUS</option>
+                                <option value="en">ENG</option>
+                                <option value="ja">JPN</option>
+                                <option value="de">DEU</option>
+                                <option value="fr">FRA</option>
+                                <option value="es">ESP</option>
+                                <option value="zh">ZHO</option>
+                                <option value="ko">KOR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="trans-input-zone">
+                        <input type="text" id="trans-input" placeholder="Вставь текст (Ctrl+V) — переведёт сам...">
+                        <button onclick="translateText()"><i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                    
+                    <div class="drop-zone" id="drop-zone">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span id="drop-text">Загрузить или перетащить скриншот</span>
+                        <input type="file" id="file-input" accept="image/*" style="display:none">
+                    </div>
+
+                    <div id="trans-result" class="trans-result" style="display: none;">
+                        <div class="result-header">
+                            <span id="result-status">Перевод</span>
+                            <button onclick="copyTrans()" title="Копировать"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                        <div id="result-text"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                
+                <div class="widget stats-widget">
+                    <div class="widget-header">
+                        <span><i class="fa-solid fa-chart-simple"></i> <span id="lbl-stats">Сегодня</span></span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-val" id="stat-done">0</span>
+                            <span class="stat-lbl" id="lbl-stat-done">✔ Выполнено</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-val" id="stat-work">0</span>
+                            <span class="stat-lbl" id="lbl-stat-work">⌛ В работе</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-val" id="stat-streak">1 дн.</span>
+                            <span class="stat-lbl" id="lbl-stat-streak">🔥 Стрик</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget grind-list">
+                    <div class="widget-header">
+                        <span><i class="fa-solid fa-list-check"></i> <span id="lbl-grind">Гринд-лист</span></span>
+                        <span id="grind-percent" style="font-size: 0.65rem; color: var(--pure-white);">0%</span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="grind-progress-fill"></div>
+                    </div>
+                    <div class="grind-input-zone">
+                        <input type="text" id="grind-input" placeholder="Добавить цель...">
+                        <button id="grind-add-btn"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <ul id="grind-tasks"></ul>
+                </div>
+
+                <div class="widget calculator">
+                    <div class="widget-header">
+                        <span><i class="fa-solid fa-calculator"></i> <span id="lbl-calc">Калькулятор</span></span>
+                    </div>
+                    <input type="text" class="calc-screen" id="calc-screen" value="0" inputmode="decimal" autocomplete="off">
+                    <div class="calc-buttons">
+                        <button onclick="pressCalc('C')">C</button>
+                        <button onclick="pressCalc('/')">/</button>
+                        <button onclick="pressCalc('*')">*</button>
+                        <button onclick="pressCalc('-')">-</button>
+                        <button onclick="pressCalc('7')">7</button>
+                        <button onclick="pressCalc('8')">8</button>
+                        <button onclick="pressCalc('9')">9</button>
+                        <button onclick="pressCalc('+')" style="grid-row: span 2; height: 100%;">+</button>
+                        <button onclick="pressCalc('4')">4</button>
+                        <button onclick="pressCalc('5')">5</button>
+                        <button onclick="pressCalc('6')">6</button>
+                        <button onclick="pressCalc('1')">1</button>
+                        <button onclick="pressCalc('2')">2</button>
+                        <button onclick="pressCalc('3')">3</button>
+                        <button onclick="pressCalc('=')" style="grid-row: span 2; height: 100%;">=</button>
+                        <button onclick="pressCalc('0')" style="grid-column: span 2;">0</button>
+                        <button onclick="pressCalc('.')">.</button>
+                    </div>
+                </div>
+
+                <div class="widget dream-widget" id="dream-widget" title="Клик — сбросить / изменить дату старта">
+                    <div class="widget-header">
+                        <span><i class="fa-solid fa-bullseye"></i> <span id="lbl-dream">Путь к мечте</span></span>
+                        <span style="font-size: 0.6rem; color: var(--text-muted);" id="dream-start-label">Старт: сегодня</span>
+                    </div>
+                    <div class="dream-container">
+                        <div>
+                            <span class="dream-days" id="dream-days-count">День 1</span>
+                            <span class="dream-subtext" id="lbl-dream-sub">• Без пропусков.</span>
+                        </div>
+                        <i class="fa-solid fa-infinity" style="color: var(--text-muted); font-size: 0.95rem;"></i>
+                    </div>
+                </div>
+
+                <div class="widget spotify-widget">
+                    <div class="widget-header">
+                        <span><i class="fa-brands fa-spotify"></i> Spotify</span>
+                    </div>
+                    <div class="spotify-card">
+                        <div class="spotify-info">
+                            <i class="fa-brands fa-spotify spotify-glow-icon"></i>
+                            <div class="spotify-status-text">
+                                <span class="status-title" id="lbl-spot-main-title">Музыка в Spotify</span>
+                                <span class="status-sub" id="lbl-spot-main-sub">Слушаю в приложении</span>
+                            </div>
+                        </div>
+                        <div class="spotify-btn-group">
+                            <a href="https://open.spotify.com/playlist/11kpLkm4ZNDZDBmLuoAfVd" target="_blank" class="spotify-btn">
+                                <i class="fa-solid fa-play"></i> I
+                            </a>
+                            <a href="https://open.spotify.com/playlist/6T3zkKG6fOyYJe43BF4HQt" target="_blank" class="spotify-btn">
+                                <i class="fa-solid fa-play"></i> II
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. АТМОСФЕРНЫЙ CANVAS-ГОРОД
+        // ==========================================
+        const bgCanvas = document.getElementById('city-bg');
+        const ctx = bgCanvas.getContext('2d');
+
+        let w, h;
+        let buildingsFar = [], buildingsMid = [], buildingsNear = [];
+
+        function initCanvas() {
+            w = bgCanvas.width = window.innerWidth;
+            h = bgCanvas.height = window.innerHeight;
+
+            buildingsFar = []; buildingsMid = []; buildingsNear = [];
+            const count = 44;
+            const bw = w / count;
+
+            for (let i = 0; i < count + 6; i++) {
+                let x = (i - 3) * bw;
+                let centerDist = Math.abs((x + bw/2) - w/2) / (w/2);
+                let maxH = 0.16 + centerDist * 0.28;
+
+                let hFar = (0.10 + Math.random() * maxH) * h;
+                buildingsFar.push({
+                    x: x, w: bw * (0.85 + Math.random() * 0.4), h: hFar,
+                    windows: Array.from({length: Math.floor(hFar / 24)}, () => ({ on: Math.random() > 0.85, warm: Math.random() < 0.015 }))
+                });
+
+                let hMid = (0.08 + Math.random() * maxH * 0.85) * h;
+                buildingsMid.push({
+                    x: x + bw * 0.2, w: bw * (0.8 + Math.random() * 0.4), h: hMid,
+                    windows: Array.from({length: Math.floor(hMid / 24)}, () => ({ on: Math.random() > 0.8, warm: Math.random() < 0.02 }))
+                });
+
+                let hNear = (0.05 + Math.random() * maxH * 0.7) * h;
+                buildingsNear.push({
+                    x: x + bw * 0.4, w: bw * (0.7 + Math.random() * 0.45), h: hNear,
+                    windows: Array.from({length: Math.floor(hNear / 28)}, () => ({ on: Math.random() > 0.78, warm: Math.random() < 0.02 }))
+                });
+            }
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+
+        let targetPx = 0, targetPy = 0, px = 0, py = 0;
+        document.addEventListener('mousemove', (e) => {
+            targetPx = (e.clientX - w / 2) * 0.008;
+            targetPy = (e.clientY - h / 2) * 0.008;
+        });
+
+        const rainFar = Array.from({length: 90}, () => ({ x: Math.random() * w, y: Math.random() * h, l: 6 + Math.random() * 8, v: 6 + Math.random() * 4 }));
+        const rainNear = Array.from({length: 65}, () => ({ x: Math.random() * w, y: Math.random() * h, l: 16 + Math.random() * 14, v: 14 + Math.random() * 8 }));
+
+        function drawCity() {
+            px += (targetPx - px) * 0.03;
+            py += (targetPy - py) * 0.03;
+            ctx.clearRect(0, 0, w, h);
+
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+            skyGrad.addColorStop(0, '#070f24'); skyGrad.addColorStop(0.55, '#080d1e'); skyGrad.addColorStop(1, '#030408');
+            ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, w, h);
+
+            const horizonGlow = ctx.createLinearGradient(0, h * 0.45, 0, h * 0.85);
+            horizonGlow.addColorStop(0, 'rgba(30, 60, 110, 0)'); horizonGlow.addColorStop(0.65, 'rgba(35, 70, 125, 0.18)'); horizonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = horizonGlow; ctx.fillRect(0, 0, w, h);
+
+            function drawBuildingLayer(list, color, parallaxFactor) {
+                list.forEach(b => {
+                    let bx = b.x + px * parallaxFactor;
+                    let by = h - b.h + py * parallaxFactor;
+                    ctx.fillStyle = color; ctx.fillRect(bx, by, b.w, b.h);
+
+                    let winCols = 2, winRows = b.windows.length;
+                    let padX = b.w / (winCols + 1), padY = b.h / (winRows + 1);
+
+                    b.windows.forEach((win, idx) => {
+                        if (win.on) {
+                            let r = Math.floor(idx / winCols), c = idx % winCols;
+                            ctx.fillStyle = win.warm ? 'rgba(240, 180, 110, 0.35)' : 'rgba(185, 205, 235, 0.13)';
+                            ctx.fillRect(bx + padX * (c + 1) - 1, by + padY * (r + 1), 2, 3);
+                        }
+                    });
+                });
+            }
+
+            drawBuildingLayer(buildingsFar, '#0a0d1a', 0.2);
+
+            ctx.strokeStyle = 'rgba(150, 175, 210, 0.04)'; ctx.lineWidth = 0.7;
+            rainFar.forEach(r => {
+                ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x - 0.8, r.y + r.l); ctx.stroke();
+                r.y += r.v; r.x -= 0.6;
+                if (r.y > h) { r.y = -r.l; r.x = Math.random() * w; }
+            });
+
+            drawBuildingLayer(buildingsMid, '#070914', 0.45);
+
+            const fogGrad = ctx.createRadialGradient(w/2 + px * 0.5, h * 0.72 + py * 0.5, 30, w/2, h * 0.72, w * 0.6);
+            fogGrad.addColorStop(0, 'rgba(25, 40, 65, 0.35)'); fogGrad.addColorStop(0.6, 'rgba(15, 24, 40, 0.18)'); fogGrad.addColorStop(1, 'rgba(2, 3, 6, 0)');
+            ctx.fillStyle = fogGrad; ctx.fillRect(0, 0, w, h);
+
+            drawBuildingLayer(buildingsNear, '#04050a', 0.7);
+
+            ctx.strokeStyle = 'rgba(180, 205, 240, 0.12)'; ctx.lineWidth = 1.2;
+            rainNear.forEach(r => {
+                ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x - 2, r.y + r.l); ctx.stroke();
+                r.y += r.v; r.x -= 1.4;
+                if (r.y > h) { r.y = -r.l; r.x = Math.random() * w; }
+            });
+
+            requestAnimationFrame(drawCity);
+        }
+        drawCity();
+
+
+        // ==========================================
+        // 2. СИСТЕМА ЛОКАЛИЗАЦИИ (RU / ENG)
+        // ==========================================
+        let currentLang = localStorage.getItem('site_lang') || 'ru';
+
+        const i18n = {
+            ru: {
+                focus: "Focus",
+                searchPlaceholder: "Поиск в Google...",
+                searchBtn: "Найти",
+                notes: "Заметки",
+                notesSaved: "сохранено",
+                notesTyping: "печать...",
+                translator: "Переводчик",
+                transInputPlaceholder: "Вставь текст (Ctrl+V) — переведёт сам...",
+                dropText: "Загрузить или перетащить скриншот",
+                statsHeader: "Сегодня",
+                statDone: "✔ Выполнено",
+                statWork: "⌛ В работе",
+                statStreak: "🔥 Стрик",
+                grindHeader: "Гринд-лист",
+                grindInputPlaceholder: "Добавить цель...",
+                calcHeader: "Калькулятор",
+                dreamHeader: "Путь к мечте",
+                dreamSubtext: "• Без пропусков.",
+                dreamStart: "Старт: ",
+                spotTitle: "Музыка в Spotify",
+                spotSubFocus: "Режим глубокого фокуса",
+                spotSubMain: "Слушаю в приложении",
+                focusTitle: "Главная задача дня",
+                focusCompleteBtn: "Выполнить задачу",
+                dayPrefix: "День ",
+                daySuffix: " дн.",
+                editPromptName: "Название приложения:",
+                editPromptUrl: "Ссылка (URL):",
+                editPromptIcon: "Класс иконки FontAwesome (например: fa-brands fa-discord):",
+                greetings: {
+                    night: "Доброй ночи.", nightSub: "Продолжим путь.",
+                    morning: "Доброе утро.", morningSub: "Новый день — новые возможности.",
+                    afternoon: "Добрый день.", afternoonSub: "Время двигаться вперёд.",
+                    evening: "Добрый вечер.", eveningSub: "Какой сегодня план?"
+                }
+            },
+            en: {
+                focus: "Focus",
+                searchPlaceholder: "Search Google...",
+                searchBtn: "Search",
+                notes: "Notes",
+                notesSaved: "saved",
+                notesTyping: "typing...",
+                translator: "Translator",
+                transInputPlaceholder: "Paste text (Ctrl+V) — auto-translates...",
+                dropText: "Upload or drop a screenshot",
+                statsHeader: "Today",
+                statDone: "✔ Completed",
+                statWork: "⌛ In Progress",
+                statStreak: "🔥 Streak",
+                grindHeader: "Grind List",
+                grindInputPlaceholder: "Add a goal...",
+                calcHeader: "Calculator",
+                dreamHeader: "Path to Dream",
+                dreamSubtext: "• No skips.",
+                dreamStart: "Start: ",
+                spotTitle: "Music on Spotify",
+                spotSubFocus: "Deep Focus Mode",
+                spotSubMain: "Listening in app",
+                focusTitle: "Main Goal of the Day",
+                focusCompleteBtn: "Complete Task",
+                dayPrefix: "Day ",
+                daySuffix: " d.",
+                editPromptName: "App Name:",
+                editPromptUrl: "URL Link:",
+                editPromptIcon: "FontAwesome Icon Class (e.g. fa-brands fa-discord):",
+                greetings: {
+                    night: "Good night.", nightSub: "Let's keep going.",
+                    morning: "Good morning.", morningSub: "New day, new opportunities.",
+                    afternoon: "Good afternoon.", afternoonSub: "Time to push forward.",
+                    evening: "Good evening.", eveningSub: "What's the plan for today?"
+                }
+            }
+        };
+
+        function toggleLanguage() {
+            currentLang = (currentLang === 'ru') ? 'en' : 'ru';
+            localStorage.setItem('site_lang', currentLang);
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            const lang = i18n[currentLang];
+            document.getElementById('lang-btn-text').textContent = currentLang.toUpperCase();
+
+            document.getElementById('lbl-focus-btn').textContent = lang.focus;
+            document.getElementById('search-input').placeholder = lang.searchPlaceholder;
+            document.getElementById('search-btn').textContent = lang.searchBtn;
+            
+            document.getElementById('lbl-notes').textContent = lang.notes;
+            document.getElementById('save-status').textContent = lang.notesSaved;
+
+            document.getElementById('lbl-trans').textContent = lang.translator;
+            document.getElementById('trans-input').placeholder = lang.transInputPlaceholder;
+            document.getElementById('drop-text').textContent = lang.dropText;
+
+            document.getElementById('lbl-stats').textContent = lang.statsHeader;
+            document.getElementById('lbl-stat-done').textContent = lang.statDone;
+            document.getElementById('lbl-stat-work').textContent = lang.statWork;
+            document.getElementById('lbl-stat-streak').textContent = lang.statStreak;
+
+            document.getElementById('lbl-grind').textContent = lang.grindHeader;
+            document.getElementById('grind-input').placeholder = lang.grindInputPlaceholder;
+
+            document.getElementById('lbl-calc').textContent = lang.calcHeader;
+            document.getElementById('lbl-dream').textContent = lang.dreamHeader;
+            document.getElementById('lbl-dream-sub').textContent = lang.dreamSubtext;
+
+            document.getElementById('lbl-spot-title').textContent = lang.spotTitle;
+            document.getElementById('lbl-spot-sub').textContent = lang.spotSubFocus;
+            document.getElementById('lbl-spot-main-title').textContent = lang.spotTitle;
+            document.getElementById('lbl-spot-main-sub').textContent = lang.spotSubMain;
+
+            document.getElementById('lbl-focus-title').textContent = lang.focusTitle;
+            document.getElementById('lbl-focus-complete').textContent = lang.focusCompleteBtn;
+
+            updateClock();
+            updateDreamCounter();
+            renderTasks();
+        }
+
+
+        // ==========================================
+        // 3. КАСТОМИЗИРУЕМАЯ СЕТКА ИЗ 9 ПРИЛОЖЕНИЙ
+        // ==========================================
+        const defaultApps = [
+            { name: "VKontakte", url: "https://vk.com", icon: "fa-brands fa-vk" },
+            { name: "Telegram", url: "https://web.telegram.org", icon: "fa-brands fa-telegram" },
+            { name: "YouTube", url: "https://youtube.com", icon: "fa-brands fa-youtube" },
+            { name: "Twitch", url: "https://twitch.tv", icon: "fa-brands fa-twitch" },
+            { name: "Gemini", url: "https://gemini.google.com", icon: "fa-solid fa-wand-magic-sparkles" },
+            { name: "ChatGPT", url: "https://chatgpt.com", icon: "fa-solid fa-robot" },
+            { name: "Claude", url: "https://claude.ai", icon: "fa-solid fa-brain" },
+            { name: "Faceit", url: "https://www.faceit.com", icon: "fa-solid fa-gamepad" },
+            { name: "Steam", url: "https://store.steampowered.com", icon: "fa-brands fa-steam" }
+        ];
+
+        let customApps = JSON.parse(localStorage.getItem('custom_apps_grid')) || defaultApps;
+
+        function renderAppsGrid() {
+            const container = document.getElementById('apps-grid-container');
+            container.innerHTML = '';
+
+            customApps.forEach((app, index) => {
+                const card = document.createElement('a');
+                card.href = app.url;
+                card.target = "_blank";
+                card.className = 'app-card';
+                card.innerHTML = `
+                    <i class="fa-solid fa-pen app-edit-btn" onclick="editAppCard(event, ${index})" title="Редактировать"></i>
+                    <div class="app-icon"><i class="${app.icon}"></i></div>
+                    <div class="app-name">${app.name}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function editAppCard(event, index) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const lang = i18n[currentLang];
+            const app = customApps[index];
+
+            const newName = prompt(lang.editPromptName, app.name);
+            if (newName === null) return;
+
+            const newUrl = prompt(lang.editPromptUrl, app.url);
+            if (newUrl === null) return;
+
+            const newIcon = prompt(lang.editPromptIcon, app.icon);
+            if (newIcon === null) return;
+
+            customApps[index] = {
+                name: newName.trim() || app.name,
+                url: newUrl.trim() || app.url,
+                icon: newIcon.trim() || "fa-solid fa-globe"
+            };
+
+            localStorage.setItem('custom_apps_grid', JSON.stringify(customApps));
+            renderAppsGrid();
+        }
+
+
+        // ==========================================
+        // 4. РЕЖИМ FOCUS С ВЫБОРОМ ЗАДАЧИ
+        // ==========================================
+        let selectedFocusIndex = parseInt(localStorage.getItem('selected_focus_index')) || 0;
+
+        function toggleFocusMode() {
+            document.body.classList.toggle('focus-mode-active');
+            updateFocusTask();
+        }
+
+        function changeFocusTask(index) {
+            selectedFocusIndex = parseInt(index);
+            localStorage.setItem('selected_focus_index', selectedFocusIndex);
+            updateFocusTask();
+        }
+
+        function updateFocusTask() {
+            const display = document.getElementById('focus-task-display');
+            const select = document.getElementById('focus-task-select');
+
+            select.innerHTML = '';
+
+            if (tasks.length === 0) {
+                display.textContent = (currentLang === 'ru') ? "Добавь задачи в Гринд-лист, чтобы сфокусироваться." : "Add tasks to Grind List to focus.";
+                select.style.display = 'none';
+                return;
+            }
+
+            select.style.display = 'inline-block';
+
+            tasks.forEach((t, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = `${t.completed ? '✔ ' : ''}${t.text}`;
+                if (i === selectedFocusIndex) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            if (selectedFocusIndex >= tasks.length) {
+                selectedFocusIndex = 0;
+            }
+
+            const current = tasks[selectedFocusIndex];
+            if (current) {
+                display.textContent = current.text + (current.completed ? " ✔" : "");
+            }
+        }
+
+        function completeFocusTask() {
+            if (tasks[selectedFocusIndex]) {
+                tasks[selectedFocusIndex].completed = !tasks[selectedFocusIndex].completed;
+                saveTasks();
+                renderTasks();
+                updateFocusTask();
+            }
+        }
+
+
+        // ==========================================
+        // 5. ЧАСЫ И ПРИВЕТСТВИЕ
+        // ==========================================
+        let is24HourFormat = localStorage.getItem('timeFormat') !== '12';
+        
+        document.getElementById('clock').addEventListener('click', () => {
+            is24HourFormat = !is24HourFormat;
+            localStorage.setItem('timeFormat', is24HourFormat ? '24' : '12');
+            updateClock();
+        });
+
+        function updateClock() {
+            const now = new Date();
+            const hour = now.getHours();
+            
+            const greetingText = document.getElementById('greeting-text');
+            const greetingSub = document.getElementById('greeting-sub');
+            const g = i18n[currentLang].greetings;
+
+            if (hour >= 0 && hour < 6) {
+                greetingText.innerHTML = `<i class="fa-regular fa-moon"></i> ${g.night}`;
+                greetingSub.textContent = g.nightSub;
+            } else if (hour >= 6 && hour < 12) {
+                greetingText.innerHTML = `<i class="fa-regular fa-sun"></i> ${g.morning}`;
+                greetingSub.textContent = g.morningSub;
+            } else if (hour >= 12 && hour < 18) {
+                greetingText.innerHTML = `<i class="fa-solid fa-sun"></i> ${g.afternoon}`;
+                greetingSub.textContent = g.afternoonSub;
+            } else {
+                greetingText.innerHTML = `<i class="fa-solid fa-moon"></i> ${g.evening}`;
+                greetingSub.textContent = g.eveningSub;
+            }
+
+            let timeString = '';
+            if (is24HourFormat) {
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                timeString = `${hours}:${minutes}:${seconds}`;
+            } else {
+                let hours = now.getHours();
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                timeString = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+            }
+            
+            document.getElementById('clock').textContent = timeString;
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('date').textContent = now.toLocaleDateString((currentLang === 'ru' ? 'ru-RU' : 'en-US'), options);
+        }
+        setInterval(updateClock, 1000);
+
+
+        // ==========================================
+        // 6. ЦИТАТА ДНЯ
+        // ==========================================
+        const dailyQuotes = [
+            "«Дисциплина — это решение делать то, чего не хочется делать, чтобы достичь того, чего очень хочется.»",
+            "«Победа любит подготовку. Маленькие шаги каждый день.»",
+            "«Безграничность начинается с фокуса на одной задаче.»",
+            "«Твой единственный соперник — ты вчерашний.»",
+            "«Фокусируйся на процессе, результат придет сам.»",
+            "«Тишина перед кастом — время для максимальной концентрации.»",
+            "«Действуй так, будто неудача просто невозможна.»"
+        ];
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+        document.getElementById('daily-quote').textContent = dailyQuotes[dayOfYear % dailyQuotes.length];
+
+
+        // ==========================================
+        // 7. ОТСЧЁТ «ПУТЬ К МЕЧТЕ»
+        // ==========================================
+        const dreamWidget = document.getElementById('dream-widget');
+        const dreamDaysCount = document.getElementById('dream-days-count');
+        const dreamStartLabel = document.getElementById('dream-start-label');
+
+        let savedStartDate = localStorage.getItem('dream_start_date');
+
+        if (!savedStartDate) {
+            savedStartDate = new Date().toISOString().split('T')[0];
+            localStorage.setItem('dream_start_date', savedStartDate);
+        }
+
+        function updateDreamCounter() {
+            const now = new Date();
+            const start = new Date(savedStartDate);
+            now.setHours(0,0,0,0); start.setHours(0,0,0,0);
+
+            const diffTime = now - start;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            const lang = i18n[currentLang];
+
+            dreamDaysCount.textContent = diffDays >= 1 ? `${lang.dayPrefix}${diffDays}` : `${lang.dayPrefix}1`;
+            dreamStartLabel.textContent = `${lang.dreamStart}${new Date(savedStartDate).toLocaleDateString((currentLang === 'ru' ? 'ru-RU' : 'en-US'))}`;
+        }
+
+        dreamWidget.addEventListener('click', () => {
+            const input = prompt('Enter start date (YYYY-MM-DD):', savedStartDate);
+            if (input !== null) {
+                savedStartDate = (input.trim() === '' || isNaN(new Date(input).getTime())) ? new Date().toISOString().split('T')[0] : input.trim();
+                localStorage.setItem('dream_start_date', savedStartDate);
+                updateDreamCounter();
+            }
+        });
+
+
+        // ==========================================
+        // 8. ГРИНД-ЛИСТ, ПРОГРЕСС И СТАТИСТИКА
+        // ==========================================
+        const grindInput = document.getElementById('grind-input');
+        const grindAddBtn = document.getElementById('grind-add-btn');
+        const grindTasks = document.getElementById('grind-tasks');
+        const grindPercent = document.getElementById('grind-percent');
+        const grindProgressFill = document.getElementById('grind-progress-fill');
+
+        const statDone = document.getElementById('stat-done');
+        const statWork = document.getElementById('stat-work');
+        const statStreak = document.getElementById('stat-streak');
+
+        let tasks = JSON.parse(localStorage.getItem('grind_tasks')) || [];
+        
+        let lastActiveDate = localStorage.getItem('last_active_date');
+        let currentStreak = parseInt(localStorage.getItem('current_streak')) || 1;
+        const todayStr = new Date().toDateString();
+
+        if (lastActiveDate !== todayStr) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (lastActiveDate === yesterday.toDateString()) {
+                currentStreak += 1;
+            } else if (lastActiveDate && new Date(lastActiveDate) < yesterday) {
+                currentStreak = 1;
+            }
+            localStorage.setItem('last_active_date', todayStr);
+            localStorage.setItem('current_streak', currentStreak);
+        }
+
+        function saveTasks() {
+            localStorage.setItem('grind_tasks', JSON.stringify(tasks));
+            updateFocusTask();
+        }
+
+        function renderTasks() {
+            grindTasks.innerHTML = '';
+            let completedCount = 0;
+
+            tasks.forEach((task, index) => {
+                if (task.completed) completedCount++;
+                const li = document.createElement('li');
+                li.className = `grind-item ${task.completed ? 'completed' : ''}`;
+                li.innerHTML = `
+                    <div class="grind-item-left" onclick="toggleTask(${index})">
+                        <span class="grind-checkbox">${task.completed ? '<i class="fa-solid fa-check"></i>' : ''}</span>
+                        <span class="grind-text">${task.text}</span>
+                    </div>
+                    <button class="grind-delete-btn" onclick="deleteTask(${index})"><i class="fa-solid fa-trash-can"></i></button>
+                `;
+                grindTasks.appendChild(li);
+            });
+
+            const total = tasks.length;
+            const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+            
+            grindPercent.textContent = `${percent}%`;
+            grindProgressFill.style.width = `${percent}%`;
+            statDone.textContent = completedCount;
+            statWork.textContent = total - completedCount;
+            statStreak.textContent = `${currentStreak}${i18n[currentLang].daySuffix}`;
+        }
+
+        grindAddBtn.addEventListener('click', () => {
+            const text = grindInput.value.trim();
+            if (text) {
+                tasks.push({ text, completed: false });
+                grindInput.value = '';
+                saveTasks();
+                renderTasks();
+            }
+        });
+
+        grindInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') grindAddBtn.click(); });
+
+        window.toggleTask = function(index) {
+            tasks[index].completed = !tasks[index].completed;
+            saveTasks();
+            renderTasks();
+        };
+
+        window.deleteTask = function(index) {
+            tasks.splice(index, 1);
+            saveTasks();
+            renderTasks();
+        };
+
+
+        // ==========================================
+        // 9. УДОБНЫЙ АВТО-ПЕРЕВОДЧИК
+        // ==========================================
+        const transInput = document.getElementById('trans-input');
+        let autoTranslateTimer = null;
+
+        function translateText() {
+            const text = transInput.value.trim();
+            const resBox = document.getElementById('trans-result');
+            const resText = document.getElementById('result-text');
+            const resStatus = document.getElementById('result-status');
+
+            const srcLang = document.getElementById('trans-src-lang').value;
+            const targetLang = document.getElementById('trans-target-lang').value;
+
+            if (text) {
+                resBox.style.display = 'flex';
+                resStatus.textContent = (currentLang === 'ru' ? 'Перевод...' : 'Translating...');
+                resText.textContent = '...';
+
+                const pair = (srcLang === 'auto') ? `autodetect|${targetLang}` : `${srcLang}|${targetLang}`;
+
+                fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${pair}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        resStatus.textContent = (currentLang === 'ru' ? 'Результат' : 'Result');
+                        resText.textContent = data.responseData.translatedText;
+                    })
+                    .catch(() => {
+                        resStatus.textContent = 'Error';
+                        resText.textContent = 'Failed to translate.';
+                    });
+            }
+        }
+
+        transInput.addEventListener('input', () => {
+            clearTimeout(autoTranslateTimer);
+            autoTranslateTimer = setTimeout(() => {
+                if (transInput.value.trim() !== '') {
+                    translateText();
+                }
+            }, 350);
+        });
+
+        transInput.addEventListener('paste', () => {
+            setTimeout(() => { if (transInput.value.trim() !== '') translateText(); }, 50);
+        });
+
+        transInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') translateText(); });
+
+        window.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let item of items) {
+                if (item.type.indexOf('image') === 0) {
+                    processPhoto(item.getAsFile());
+                    break;
+                }
+            }
+        });
+
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault(); dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) processPhoto(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) processPhoto(e.target.files[0]);
+        });
+
+        function processPhoto(file) {
+            const resBox = document.getElementById('trans-result');
+            const resText = document.getElementById('result-text');
+            const resStatus = document.getElementById('result-status');
+
+            const srcSelect = document.getElementById('trans-src-lang');
+            const targetLang = document.getElementById('trans-target-lang').value;
+            
+            const selectedOption = srcSelect.options[srcSelect.selectedIndex];
+            const ocrLang = selectedOption.getAttribute('data-ocr') || 'eng+rus';
+            const srcLang = srcSelect.value;
+
+            resBox.style.display = 'flex';
+            resStatus.textContent = 'OCR...';
+            resText.textContent = '...';
+
+            Tesseract.recognize(file, ocrLang)
+                .then(({ data: { text } }) => {
+                    if (text.trim() === '') {
+                        resStatus.textContent = 'Error';
+                        resText.textContent = 'No text found.';
+                        return;
+                    }
+                    resStatus.textContent = 'Translating...';
+                    const pair = (srcLang === 'auto') ? `autodetect|${targetLang}` : `${srcLang}|${targetLang}`;
+
+                    fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${pair}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            resStatus.textContent = 'Result';
+                            resText.textContent = data.responseData.translatedText;
+                        });
+                })
+                .catch(() => {
+                    resStatus.textContent = 'Error';
+                    resText.textContent = 'OCR failed.';
+                });
+        }
+
+        window.copyTrans = function() {
+            navigator.clipboard.writeText(document.getElementById('result-text').textContent);
+        };
+
+
+        // ==========================================
+        // 10. ИНТЕРАКТИВНЫЙ КАЛЬКУЛЯТОР
+        // ==========================================
+        const calcScreen = document.getElementById('calc-screen');
+        let calcInput = '';
+
+        function pressCalc(val) {
+            if (val === 'C') {
+                calcInput = '';
+                calcScreen.value = '0';
+            } else if (val === '=') {
+                try {
+                    const evalTarget = calcInput || calcScreen.value;
+                    const sanitized = evalTarget.replace(/[^0-9+\-*/.]/g, '');
+                    const result = eval(sanitized);
+                    calcInput = String(result);
+                    calcScreen.value = calcInput;
+                } catch (e) {
+                    calcScreen.value = 'Error';
+                    calcInput = '';
+                }
+            } else {
+                if (calcScreen.value === '0' || calcScreen.value === 'Error' || calcScreen.value === 'Ошибка') {
+                    calcInput = '';
+                }
+                calcInput += val;
+                calcScreen.value = calcInput;
+            }
+        }
+
+        calcScreen.addEventListener('focus', () => { if (calcScreen.value === '0') calcScreen.select(); });
+        calcScreen.addEventListener('input', () => {
+            let val = calcScreen.value.replace(/[^0-9+\-*/.]/g, '');
+            calcInput = val; calcScreen.value = val;
+        });
+
+        calcScreen.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); pressCalc('='); }
+            else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') { e.preventDefault(); pressCalc('C'); }
+        });
+
+
+        // ==========================================
+        // 11. АВТОСОХРАНЕНИЕ БЛОКНОТА И ИНИЦИАЛИЗАЦИЯ
+        // ==========================================
+        const notesArea = document.getElementById('notes-area');
+        const saveStatus = document.getElementById('save-status');
+
+        notesArea.value = localStorage.getItem('user_notes') || '';
+        notesArea.addEventListener('input', () => {
+            saveStatus.textContent = i18n[currentLang].notesTyping;
+            localStorage.setItem('user_notes', notesArea.value);
+            setTimeout(() => { saveStatus.textContent = i18n[currentLang].notesSaved; }, 500);
+        });
+
+        // Старт
+        renderAppsGrid();
+        applyLanguage();
+        updateClock();
+    </script>
+</body>
+</html>
